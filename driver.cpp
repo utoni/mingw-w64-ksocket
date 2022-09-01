@@ -55,12 +55,30 @@ DriverEntry(_In_ PDRIVER_OBJECT DriverObject,
 
     int sockfd;
     sockfd = socket_connection(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    result = connect(sockfd, res->ai_addr, (int)res->ai_addrlen);
-    result = send(sockfd, send_buffer, sizeof(send_buffer), 0);
-    result = recv(sockfd, recv_buffer, sizeof(recv_buffer), 0);
-    recv_buffer[sizeof(recv_buffer) - 1] = '\0';
+    if (sockfd < 0) {
+      DebuggerPrint("TCP client socket_connection failed\n");
+      return STATUS_FAILED_DRIVER_ENTRY;
+    }
 
-    DebuggerPrint("TCP client:\n%s\n", recv_buffer);
+    result = connect(sockfd, res->ai_addr, (int)res->ai_addrlen);
+    if (result != 0) {
+      DebuggerPrint("TCP client connect failed\n");
+      return STATUS_FAILED_DRIVER_ENTRY;
+    }
+
+    result = send(sockfd, send_buffer, sizeof(send_buffer), 0);
+    if (result <= 0) {
+      DebuggerPrint("TCP client send failed\n");
+      return STATUS_FAILED_DRIVER_ENTRY;
+    }
+
+    result = recv(sockfd, recv_buffer, sizeof(recv_buffer), 0);
+    if (result <= 0) {
+      DebuggerPrint("TCP client recv failed\n");
+      return STATUS_FAILED_DRIVER_ENTRY;
+    } else {
+      DebuggerPrint("TCP client:\n%.*s\n", result, recv_buffer);
+    }
 
     closesocket(sockfd);
   }
@@ -73,7 +91,6 @@ DriverEntry(_In_ PDRIVER_OBJECT DriverObject,
 
   {
     int result;
-    UNREFERENCED_PARAMETER(result);
 
     char send_buffer[] = "Hello from WSK!";
     char recv_buffer[1024] = {0};
@@ -86,18 +103,33 @@ DriverEntry(_In_ PDRIVER_OBJECT DriverObject,
     addr.sin_port = htons(9095);
 
     result = bind(server_sockfd, (struct sockaddr *)&addr, sizeof(addr));
+    if (result != 0) {
+      DebuggerPrint("TCP server bind failed\n");
+      return STATUS_FAILED_DRIVER_ENTRY;
+    }
+
     result = listen(server_sockfd, 1);
+    if (result != 0) {
+      DebuggerPrint("TCP server listen failed\n");
+      return STATUS_FAILED_DRIVER_ENTRY;
+    }
 
     socklen_t addrlen = sizeof(addr);
     int client_sockfd =
         accept(server_sockfd, (struct sockaddr *)&addr, &addrlen);
 
     result = recv(client_sockfd, recv_buffer, sizeof(recv_buffer) - 1, 0);
-    recv_buffer[sizeof(recv_buffer) - 1] = '\0';
-
-    DebuggerPrint("TCP server:\n%s\n", recv_buffer);
+    if (result > 0) {
+      DebuggerPrint("TCP server:\n%.*s\n", result, recv_buffer);
+    } else {
+      DebuggerPrint("TCP server recv failed\n");
+    }
 
     result = send(client_sockfd, send_buffer, sizeof(send_buffer), 0);
+
+    // Wait for the client to terminate the connection.
+    do {
+    } while (recv(client_sockfd, recv_buffer, sizeof(recv_buffer) - 1, 0) > 0);
 
     closesocket(client_sockfd);
     closesocket(server_sockfd);

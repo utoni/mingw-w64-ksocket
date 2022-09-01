@@ -1,8 +1,11 @@
 #ifndef WSK_H
 #define WSK_H 1
 
+#include <ntddk.h>
+
 #if !defined(__MINGW64__)
-#error "This was designed to work **only** with Mingw-w64! For MSVC, please check https://github.com/wbenny/KSOCKET out"
+#error                                                                         \
+    "This was designed to work **only** with Mingw-w64! For MSVC, please check https://github.com/wbenny/KSOCKET out"
 #endif
 
 #if (NTDDI_VERSION < NTDDI_WIN10)
@@ -11,7 +14,8 @@
 #endif
 
 #if !defined(__BYTE_ORDER__) || __BYTE_ORDER__ != __ORDER_LITTLE_ENDIAN__
-#error "This project requires a little endian system. Does Windows support any other?"
+#error                                                                         \
+    "This project requires a little endian system. Does Windows support any other?"
 #endif
 
 // ---------------------------------------------------------------
@@ -110,38 +114,38 @@ typedef enum {
 // ---------------------------------------------------------------
 
 typedef struct addrinfo {
-  int             ai_flags;
-  int             ai_family;
-  int             ai_socktype;
-  int             ai_protocol;
-  size_t          ai_addrlen;
-  char            *ai_canonname;
+  int ai_flags;
+  int ai_family;
+  int ai_socktype;
+  int ai_protocol;
+  size_t ai_addrlen;
+  char *ai_canonname;
   struct sockaddr *ai_addr;
   struct addrinfo *ai_next;
 } ADDRINFOA, *PADDRINFOA;
 
 typedef struct addrinfoexA {
-  int                ai_flags;
-  int                ai_family;
-  int                ai_socktype;
-  int                ai_protocol;
-  size_t             ai_addrlen;
-  char               *ai_canonname;
-  struct sockaddr    *ai_addr;
-  void               *ai_blob;
-  size_t             ai_bloblen;
-  LPGUID             ai_provider;
+  int ai_flags;
+  int ai_family;
+  int ai_socktype;
+  int ai_protocol;
+  size_t ai_addrlen;
+  char *ai_canonname;
+  struct sockaddr *ai_addr;
+  void *ai_blob;
+  size_t ai_bloblen;
+  LPGUID ai_provider;
   struct addrinfoexA *ai_next;
 } ADDRINFOEXA, *PADDRINFOEXA, *LPADDRINFOEXA;
 
 typedef struct addrinfoW {
-  int              ai_flags;
-  int              ai_family;
-  int              ai_socktype;
-  int              ai_protocol;
-  size_t           ai_addrlen;
-  PWSTR            ai_canonname;
-  struct sockaddr  *ai_addr;
+  int ai_flags;
+  int ai_family;
+  int ai_socktype;
+  int ai_protocol;
+  size_t ai_addrlen;
+  PWSTR ai_canonname;
+  struct sockaddr *ai_addr;
   struct addrinfoW *ai_next;
 } ADDRINFOW, *PADDRINFOW;
 

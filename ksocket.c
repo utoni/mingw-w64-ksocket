@@ -172,7 +172,20 @@ KspAsyncContextWaitForCompletion(_In_ PKSOCKET_ASYNC_CONTEXT AsyncContext,
 NTSTATUS
 NTAPI
 KsInitialize(VOID) {
+  OSVERSIONINFOEXW OsVersionInfo;
   NTSTATUS Status;
+
+  OsVersionInfo.dwOSVersionInfoSize = sizeof(OsVersionInfo);
+  Status = RtlGetVersion((POSVERSIONINFOW)&OsVersionInfo);
+
+  if (!NT_SUCCESS(Status)) {
+    return Status;
+  }
+
+  if (OsVersionInfo.wProductType != VER_NT_WORKSTATION ||
+      OsVersionInfo.dwMajorVersion != 10 || OsVersionInfo.dwMinorVersion != 0) {
+    return STATUS_UNSUPPORTED_WINDOWS_VERSION;
+  }
 
   //
   // Register as a WSK client.

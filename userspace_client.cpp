@@ -47,7 +47,7 @@ int main(int argc, char **argv) {
     return 1;
   }
 
-  do {
+  {
     char recvbuf[1024];
 
     iResult = recv(sock, recvbuf, 1024, 0);
@@ -55,12 +55,12 @@ int main(int argc, char **argv) {
       wprintf(L"Bytes received: %d\n", iResult);
       wprintf(L"Data received: %.*s\n", iResult, recvbuf);
     } else if (iResult == 0) {
-      wprintf(L"Connection closed\n");
+      wprintf(L"Connection closed by remote\n");
     } else if (WSAGetLastError() != WSAECONNRESET) {
       wprintf(L"recv failed: %d\n", WSAGetLastError());
     }
-  } while (iResult > 0);
-  wprintf(L"connection closed by remote\n");
+  };
+  wprintf(L"Closing Connection ..\n");
 
   iResult = closesocket(sock);
   if (iResult == SOCKET_ERROR) {
