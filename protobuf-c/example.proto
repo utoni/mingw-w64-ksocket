@@ -1,0 +1,31 @@
+syntax = "proto2";
+
+message SomethingWithUINTs {
+  optional uint32 id = 1;
+  optional uint32 ip_address = 2;
+  optional uint32 port_num = 3;
+}
+
+message SomethingMore {
+  enum Errors {
+    SUCCESS = 200;
+    ERROR_BAD_REQUEST = 400;
+    ERROR_NOT_FOUND = 404;
+    ERROR_SERVER_ERROR = 500;
+    ERROR_SERVICE_UNAVAILABLE = 503;
+  }
+  optional Errors error_code = 1;
+  optional SomethingWithUINTs uints = 2;
+}
+
+message EvenMore {
+  enum SomeEnum {
+    FIRST = 0xFE;
+    SECOND = 0xFF;
+  }
+  required SomeEnum enum_value = 1;
+  repeated SomethingWithUINTs uints = 2;
+  required bytes name=3;
+  required bytes value=4;
+  optional string s=5;
+}

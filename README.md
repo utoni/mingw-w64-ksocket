@@ -26,9 +26,10 @@ make DPP_ROOT="[path-to-mingw-w64-dpp-template-dir]" DESTDIR="[path-to-install-d
 
 The directory `[path-to-install-dir]` should now contain three new files:
 
- * `driver.bat`: setup the driver service, start it, stop it when it's done and delete it
+ * `driver.bat` / `driver-protobuf-c.bat`: setup the driver service, start it, stop it when it's done and delete it
  * `driver.sys`: example driver that uses kernel sockets
  * `userspace_client.exe`: example userspace application which communicates with the driver via TCP socket
+ * `driver-protobuf-c.sys`: example driver that make use of protobuf-c (local, no TCP/IP)
 
 Start `driver.bat` as `Administrator` and then `userspace_client.exe`.
 
