@@ -5,23 +5,23 @@ endif
 include $(DPP_ROOT)/Makefile.inc
 
 DRIVER0_NAME = driver
-DRIVER0_OBJECTS = $(DRIVER0_NAME).o ksocket.o berkeley.o
+DRIVER0_OBJECTS = examples/$(DRIVER0_NAME).o ksocket.o berkeley.o
 DRIVER0_TARGET = $(DRIVER0_NAME).sys
 
 DRIVER1_NAME = driver-protobuf-c
-DRIVER1_OBJECTS = $(DRIVER1_NAME).o protobuf-c/protobuf-c.o protobuf-c/example.pb-c.o
+DRIVER1_OBJECTS = examples/$(DRIVER1_NAME).o protobuf-c/protobuf-c.o examples/example.pb-c.o
 DRIVER1_TARGET = $(DRIVER1_NAME).sys
 
 DRIVER2_NAME = driver-protobuf-c-tcp
-DRIVER2_OBJECTS = $(DRIVER2_NAME).o ksocket.o berkeley.o protobuf-c/protobuf-c.o protobuf-c/example.pb-c.o
+DRIVER2_OBJECTS = examples/$(DRIVER2_NAME).o ksocket.o berkeley.o protobuf-c/protobuf-c.o examples/example.pb-c.o
 DRIVER2_TARGET = $(DRIVER2_NAME).sys
 
 USERSPACE0_NAME = userspace_client
-USERSPACE0_OBJECTS = $(USERSPACE0_NAME).o
+USERSPACE0_OBJECTS = examples/$(USERSPACE0_NAME).o
 USERSPACE0_TARGET = $(USERSPACE0_NAME).exe
 
 USERSPACE1_NAME = userspace_client_protobuf
-USERSPACE1_OBJECTS = $(USERSPACE1_NAME).o protobuf-c/protobuf-c.o protobuf-c/example.pb-c.o
+USERSPACE1_OBJECTS = examples/$(USERSPACE1_NAME).o protobuf-c/protobuf-c.o examples/example.pb-c.o
 USERSPACE1_TARGET = $(USERSPACE1_NAME).exe
 
 # mingw-w64-dpp related
@@ -53,15 +53,18 @@ $(USERSPACE0_TARGET): $(USERSPACE0_OBJECTS)
 $(USERSPACE1_TARGET): $(USERSPACE1_OBJECTS)
 	$(call LINK_CPP_USER_TARGET,$(USERSPACE1_OBJECTS),$@)
 
+generate:
+	protoc-c --c_out=. examples/example.proto
+
 install: $(DRIVER0_TARGET) $(DRIVER1_TARGET) $(DRIVER2_TARGET) $(USERSPACE0_TARGET) $(USERSPACE1_TARGET)
 	$(call INSTALL_EXEC_SIGN,$(DRIVER0_TARGET))
 	$(call INSTALL_EXEC_SIGN,$(DRIVER1_TARGET))
 	$(call INSTALL_EXEC_SIGN,$(DRIVER2_TARGET))
 	$(call INSTALL_EXEC,$(USERSPACE0_TARGET))
 	$(call INSTALL_EXEC,$(USERSPACE1_TARGET))
-	$(INSTALL) '$(DRIVER0_NAME).bat' '$(DESTDIR)/'
-	$(INSTALL) '$(DRIVER1_NAME).bat' '$(DESTDIR)/'
-	$(INSTALL) '$(DRIVER2_NAME).bat' '$(DESTDIR)/'
+	$(INSTALL) 'examples/$(DRIVER0_NAME).bat' '$(DESTDIR)/'
+	$(INSTALL) 'examples/$(DRIVER1_NAME).bat' '$(DESTDIR)/'
+	$(INSTALL) 'examples/$(DRIVER2_NAME).bat' '$(DESTDIR)/'
 
 clean:
 	rm -f $(DRIVER0_OBJECTS) $(DRIVER1_OBJECTS) $(DRIVER2_OBJECTS)

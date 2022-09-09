@@ -1,6 +1,6 @@
 #include "berkeley.h"
 #include "ksocket.h"
-#include "protobuf-c/example.pb-c.h"
+#include "examples/example.pb-c.h"
 #include "wsk.h"
 
 #include "common.hpp"

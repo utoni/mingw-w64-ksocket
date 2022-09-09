@@ -1,4 +1,4 @@
-#include "protobuf-c/example.pb-c.h"
+#include "examples/example.pb-c.h"
 
 #include <EASTL/algorithm.h>
 #include <EASTL/array.h>

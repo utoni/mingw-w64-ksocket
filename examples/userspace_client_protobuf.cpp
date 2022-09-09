@@ -4,7 +4,7 @@
 #include <ws2tcpip.h>
 
 #include "common.hpp"
-#include "protobuf-c/example.pb-c.h"
+#include "examples/example.pb-c.h"
 
 int main(int argc, char **argv) {
   WSADATA wsaData = {};
