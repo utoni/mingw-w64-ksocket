@@ -1,7 +1,7 @@
 #pragma once
 #include <ntddk.h>
 #include <stdint.h>
-#include <wsk.h>
+#include <ksocket/wsk.h>
 
 #define socket socket_connection
 

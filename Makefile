@@ -5,7 +5,7 @@ endif
 include $(DPP_ROOT)/Makefile.inc
 
 DRIVER0_NAME = driver
-DRIVER0_OBJECTS = examples/$(DRIVER0_NAME).o ksocket.o berkeley.o
+DRIVER0_OBJECTS = examples/$(DRIVER0_NAME).o ksocket/ksocket.o ksocket/berkeley.o
 DRIVER0_TARGET = $(DRIVER0_NAME).sys
 
 DRIVER1_NAME = driver-protobuf-c
@@ -13,7 +13,7 @@ DRIVER1_OBJECTS = examples/$(DRIVER1_NAME).o protobuf-c/protobuf-c.o examples/ex
 DRIVER1_TARGET = $(DRIVER1_NAME).sys
 
 DRIVER2_NAME = driver-protobuf-c-tcp
-DRIVER2_OBJECTS = examples/$(DRIVER2_NAME).o ksocket.o berkeley.o protobuf-c/protobuf-c.o examples/example.pb-c.o
+DRIVER2_OBJECTS = examples/$(DRIVER2_NAME).o ksocket/ksocket.o ksocket/berkeley.o protobuf-c/protobuf-c.o examples/example.pb-c.o
 DRIVER2_TARGET = $(DRIVER2_NAME).sys
 
 USERSPACE0_NAME = userspace_client
@@ -54,6 +54,11 @@ $(USERSPACE1_TARGET): $(USERSPACE1_OBJECTS)
 	$(call LINK_CPP_USER_TARGET,$(USERSPACE1_OBJECTS),$@)
 
 generate:
+	@echo '=========================================='
+	@echo '= You need protobuf-c to make this work! ='
+	@echo '=========================================='
+	@echo 'Get it here: https://github.com/protobuf-c/protobuf-c'
+	@echo
 	protoc-c --c_out=. examples/example.proto
 
 install: $(DRIVER0_TARGET) $(DRIVER1_TARGET) $(DRIVER2_TARGET) $(USERSPACE0_TARGET) $(USERSPACE1_TARGET)

@@ -1,8 +1,8 @@
 
 extern "C" {
-#include "berkeley.h"
-#include "ksocket.h"
-#include "wsk.h"
+#include <ksocket/berkeley.h>
+#include <ksocket/ksocket.h>
+#include <ksocket/wsk.h>
 
 DRIVER_INITIALIZE DriverEntry;
 DRIVER_UNLOAD DriverUnload;

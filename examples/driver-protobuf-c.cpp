@@ -1,9 +1,10 @@
-#include "berkeley.h"
-#include "ksocket.h"
-#include "examples/example.pb-c.h"
-#include "wsk.h"
+#include <ksocket/berkeley.h>
+#include <ksocket/helper.hpp>
+#include <ksocket/ksocket.h>
+#include <ksocket/wsk.h>
 
-#include "common.hpp"
+#include "examples/common.hpp"
+#include "examples/example.pb-c.h"
 
 extern "C" {
 DRIVER_INITIALIZE DriverEntry;

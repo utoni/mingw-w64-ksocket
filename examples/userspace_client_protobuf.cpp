@@ -3,7 +3,9 @@
 #include <winsock2.h>
 #include <ws2tcpip.h>
 
-#include "common.hpp"
+#include <ksocket/helper.hpp>
+
+#include "examples/common.hpp"
 #include "examples/example.pb-c.h"
 
 int main(int argc, char **argv) {
