@@ -26,13 +26,15 @@ make DPP_ROOT="[path-to-mingw-w64-dpp-template-dir]" DESTDIR="[path-to-install-d
 
 The directory `[path-to-install-dir]` should now contain three new files:
 
- * `driver.bat` / `driver-protobuf-c.bat`: setup the driver service, start it, stop it when it's done and delete it
- * `driver.sys`: example driver that uses kernel sockets
- * `userspace_client.exe`: example userspace application which communicates with the driver via TCP socket
+ * `driver.bat` / `driver-protobuf-c.bat` / `driver-protobuf-c-tcp.bat`: setup the driver service, start it, stop it when it's done and delete it
+ * `driver.sys`: example driver that uses kernel sockets (used together with `userspace_client.exe`)
+ * `userspace_client.exe`: example userspace application which communicates with the driver via TCP
  * `driver-protobuf-c.sys`: example driver that make use of protobuf-c (local, no TCP/IP)
+ * `driver-protobuf-c-tcp.sys`: example driver that make use of protobuf-c  via TCP/IP (used together with `userspace_client_protobuf.exe`)
+ * `userspace_client_protobuf.exe`: example userspace application which leverages protocol buffers to communicate with the driver via TCP
 
-Start `driver.bat` as `Administrator` and then `userspace_client.exe`.
+Start `*.bat` as `Administrator`.
 
-If everything works fine, there should be a text displayed in `userspace_client.exe` console window, received from the driver.
+If everything works fine, there should be a text displayed in `userspace_client.exe` / `userspace_client_protobuf.exe` console window, received from the driver.
 
 For more debug output, it is recommended to use a debugger or log viewer like `dbgview`.

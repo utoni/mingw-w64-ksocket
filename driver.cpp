@@ -117,6 +117,10 @@ DriverEntry(_In_ PDRIVER_OBJECT DriverObject,
     socklen_t addrlen = sizeof(addr);
     int client_sockfd =
         accept(server_sockfd, (struct sockaddr *)&addr, &addrlen);
+    if (client_sockfd < 0) {
+      DebuggerPrint("TCP accept failed\n");
+      return STATUS_FAILED_DRIVER_ENTRY;
+    }
 
     result = recv(client_sockfd, recv_buffer, sizeof(recv_buffer) - 1, 0);
     if (result > 0) {

@@ -1,10 +1,11 @@
-
-extern "C" {
 #include "berkeley.h"
 #include "ksocket.h"
 #include "protobuf-c/example.pb-c.h"
 #include "wsk.h"
 
+#include "common.hpp"
+
+extern "C" {
 DRIVER_INITIALIZE DriverEntry;
 DRIVER_UNLOAD DriverUnload;
 
@@ -19,91 +20,78 @@ DriverEntry(_In_ PDRIVER_OBJECT DriverObject,
   UNREFERENCED_PARAMETER(RegistryPath);
 
   size_t len = 0;
-  uint8_t *buf = NULL;
 
   {
-    SomethingMore sm = SOMETHING_MORE__INIT;
-    SomethingWithUINTs swu = SOMETHING_WITH_UINTS__INIT;
+    uint8_t *buf = NULL;
 
-    sm.error_code = SOMETHING_MORE__ERRORS__SUCCESS;
-    sm.uints = &swu;
-    swu.has_id = TRUE;
-    swu.id = 0x12345678;
-    swu.has_ip_address = TRUE;
-    swu.ip_address = 0xAAAAAAAA;
-    swu.has_port_num = TRUE;
-    swu.port_num = 0xBBBBBBBB;
+    {
+      SomethingMoreSerializer sms;
+      sms.SetErrorCode(SOMETHING_MORE__ERRORS__SUCCESS);
+      sms.SetId(0x12345678);
+      sms.SetIpAddress(0xAAAAAAAA);
+      sms.SetPortNum(0xBBBBBBBB);
+      len = sms.GetSerializedSize();
+      buf = (uint8_t *)malloc(len);
+      if (buf == NULL) {
+        return STATUS_UNSUCCESSFUL;
+      }
+      if (sms.Serialize(buf) != len) {
+        DebuggerPrint("Packing failed.\n");
+        free(buf);
+        return STATUS_UNSUCCESSFUL;
+      }
 
-    len = something_more__get_packed_size(&sm);
-    buf = (uint8_t *)malloc(len);
-    if (something_more__pack(&sm, buf) != len) {
-      DebuggerPrint("Packing failed.\n");
+      DebuggerPrint("Packed Size: %zu\n", len);
+
+      SomethingMoreDeserializer smd;
+      if (smd.Deserialize(len, buf) == true && smd.sm->uints != NULL &&
+          smd.sm->uints->id == 0x12345678 &&
+          smd.sm->uints->ip_address == 0xAAAAAAAA &&
+          smd.sm->uints->port_num == 0xBBBBBBBB) {
+        DebuggerPrint("Success!\n");
+      }
     }
+
+    free(buf);
   }
 
-  DebuggerPrint("Packed Size: %zu\n", len);
-
   {
-    SomethingMore *smth = something_more__unpack(NULL, len, buf);
-    if (smth != NULL && smth->uints != NULL && smth->uints->id == 0x12345678 &&
-        smth->uints->ip_address == 0xAAAAAAAA &&
-        smth->uints->port_num == 0xBBBBBBBB) {
-      DebuggerPrint("Success!\n");
-    }
-    DebuggerPrint("id: %x, ip_address: %x, port_num: %x\n", smth->uints->id,
-                  smth->uints->ip_address, smth->uints->port_num);
-    something_more__free_unpacked(smth, NULL);
-  }
+    EvenMoreSerializer ems(EVEN_MORE__SOME_ENUM__FIRST,
+                           {0xde, 0xad, 0xc0, 0xde}, {0xde, 0xad, 0xc0, 0xde});
+    SomethingWithUINTsSerializer sws[3];
 
-  free(buf);
+    sws[0].SetId(0xdeadc0de);
+    sws[1].SetIpAddress(0xdeadbeef);
+    sws[2].SetPortNum(0xcafecafe);
 
-  {
-    EvenMore em = EVEN_MORE__INIT;
-    SomethingWithUINTs swu[] = {SOMETHING_WITH_UINTS__INIT,
-                                SOMETHING_WITH_UINTS__INIT,
-                                SOMETHING_WITH_UINTS__INIT};
-    SomethingWithUINTs *swu_vec[] = {&swu[0], &swu[1], &swu[2]};
-    uint8_t bin[] = {0xde, 0xad, 0xc0, 0xde};
-    ProtobufCBinaryData pbin = {.len = sizeof(bin), .data = bin};
-    char str[] = "This is a zero-terminated String!";
+    ems.SetS("This is a zero-terminated String!");
+    ems.AddUints(&sws[0]);
+    ems.AddUints(&sws[1]);
+    ems.AddUints(&sws[2]);
 
-    em.enum_value = EVEN_MORE__SOME_ENUM__FIRST;
-    swu[0].has_id = TRUE;
-    swu[0].id = 0xdeadc0de;
-    swu[1].has_ip_address = TRUE;
-    swu[1].ip_address = 0xdeadbeef;
-    swu[2].has_port_num = TRUE;
-    swu[2].port_num = 0xcafecafe;
-    em.n_uints = sizeof(swu) / sizeof(swu[0]);
-    em.uints = swu_vec;
-    em.name = pbin;
-    em.value = pbin;
-    em.s = str;
-
-    len = even_more__get_packed_size(&em);
+    len = ems.GetSerializedSize();
     uint8_t tmp[len];
-    if (even_more__pack(&em, tmp) != len) {
+    if (ems.Serialize(tmp) != len) {
       DebuggerPrint("Packing failed.\n");
     }
     DebuggerPrint("Packed Size: %zu\n", len);
 
-    EvenMore *result = even_more__unpack(NULL, len, tmp);
-    if (result != NULL && result->n_uints == 3 && result->uints != NULL &&
-        result->name.len > 0 && result->name.data != NULL &&
-        result->value.len > 0 && result->value.data != NULL &&
-        result->s != NULL) {
-      if (result->enum_value != EVEN_MORE__SOME_ENUM__FIRST ||
-          result->uints[0]->has_id != TRUE ||
-          result->uints[0]->id != 0xdeadc0de ||
-          result->uints[1]->has_ip_address != TRUE ||
-          result->uints[1]->ip_address != 0xdeadbeef ||
-          result->uints[1]->has_port_num != TRUE ||
-          result->uints[2]->port_num != 0xcafecafe) {
+    EvenMoreDeserializer emd;
+    if (emd.Deserialize(len, tmp) == true && emd.em->n_uints == 3 &&
+        emd.em->uints != NULL && emd.em->name.len > 0 &&
+        emd.em->name.data != NULL && emd.em->value.len > 0 &&
+        emd.em->value.data != NULL && emd.em->s != NULL) {
+      if (emd.em->enum_value == EVEN_MORE__SOME_ENUM__FIRST ||
+          emd.em->uints[0]->has_id == TRUE ||
+          emd.em->uints[0]->id == 0xdeadc0de ||
+          emd.em->uints[1]->has_ip_address == TRUE ||
+          emd.em->uints[1]->ip_address == 0xdeadbeef ||
+          emd.em->uints[2]->has_port_num == TRUE ||
+          emd.em->uints[2]->port_num == 0xcafecafe) {
         DebuggerPrint("Success!\n");
       }
-      DebuggerPrint("Deserialized String: '%s'\n", result->s);
+      DebuggerPrint("Deserialized String: '%s'\n", emd.em->s);
     }
-    even_more__free_unpacked(result, NULL);
   }
 
   return STATUS_SUCCESS;
