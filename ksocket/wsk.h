@@ -27,11 +27,20 @@
 #define WSK_NO_WAIT 0
 #define WSK_INFINITE_WAIT 0xffffffff
 
+#define WSK_SET_STATIC_EVENT_CALLBACKS 7
+
 #define WSK_FLAG_BASIC_SOCKET 0x00000000
 #define WSK_FLAG_LISTEN_SOCKET 0x00000001
 #define WSK_FLAG_CONNECTION_SOCKET 0x00000002
 #define WSK_FLAG_DATAGRAM_SOCKET 0x00000004
 #define WSK_FLAG_STREAM_SOCKET 0x00000008
+
+#define WSK_EVENT_RECEIVE_FROM     0x00000100 // Datagram sockets
+#define WSK_EVENT_ACCEPT           0x00000200 // Listen sockets
+#define WSK_EVENT_SEND_BACKLOG     0x00000010 // Connection and Listen sockets
+#define WSK_EVENT_RECEIVE          0x00000040 // Connection and Listen sockets
+#define WSK_EVENT_DISCONNECT       0x00000080 // Connection and Listen sockets
+#define WSK_EVENT_DISABLE          0x80000000
 
 #define INADDR_ANY ((ULONG)0x00000000)
 
@@ -49,6 +58,8 @@ struct _WSK_PROVIDER_NPI;
 typedef struct _WSK_PROVIDER_NPI WSK_PROVIDER_NPI;
 typedef struct _WSK_PROVIDER_NPI *PWSK_PROVIDER_NPI;
 
+typedef GUID NPIID;
+typedef CONST NPIID *PNPIID;
 typedef PVOID PWSK_CLIENT;
 
 // ---------------------------------------------------------------
@@ -235,6 +246,11 @@ typedef struct _WSK_REGISTRATION {
   PVOID ReservedRegistrationContext;
   KSPIN_LOCK ReservedRegistrationLock;
 } WSK_REGISTRATION, *PWSK_REGISTRATION;
+
+typedef struct _WSK_EVENT_CALLBACK_CONTROL {
+    PNPIID NpiId;
+    ULONG  EventMask;
+} WSK_EVENT_CALLBACK_CONTROL, *PWSK_EVENT_CALLBACK_CONTROL;
 
 // ---------------------------------------------------------------
 // callback functions
