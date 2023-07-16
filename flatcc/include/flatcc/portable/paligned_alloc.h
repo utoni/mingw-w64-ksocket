@@ -112,7 +112,7 @@ extern "C" {
 #ifdef PORTABLE_DEBUG_ALIGNED_ALLOC
 #error "DEBUG: C11_ALIGNED_ALLOC configured"
 #endif
-#elif defined(_MSC_VER) || defined(__MINGW32__)
+#elif 0
 
 #ifdef PORTABLE_DEBUG_ALIGNED_ALLOC
 #error "DEBUG: Windows _aligned_malloc configured"
