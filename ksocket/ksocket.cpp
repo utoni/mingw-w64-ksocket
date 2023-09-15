@@ -24,9 +24,14 @@ struct KSocketImplCommon {
 
 #ifdef BUILD_USERMODE
 struct KSocketImpl {
-  ~KSocketImpl() { closesocket(s); }
+  ~KSocketImpl() {
+    if (s != INVALID_SOCKET) {
+      closesocket(s);
+      s = INVALID_SOCKET;
+    }
+  }
 
-  SOCKET s;
+  SOCKET s = INVALID_SOCKET;
   KSocketImplCommon c;
 };
 #else
@@ -193,7 +198,7 @@ bool KSocket::connect(eastl::string host, eastl::string port) {
 
   m_lastError = KSE_SUCCESS;
 
-  if (m_socket == nullptr)
+  if (!sanityCheck())
     return false;
 
   if (m_socketType != KSocketType::KST_STREAM_CLIENT_IP4 &&
@@ -216,6 +221,9 @@ bool KSocket::connect(eastl::string host, eastl::string port) {
 bool KSocket::bind(uint16_t port) {
   struct sockaddr_in addr;
 
+  if (!sanityCheck())
+    return false;
+
   addr.sin_family = AF_INET;
   addr.sin_addr.s_addr = INADDR_ANY;
   addr.sin_port = htons(port);
@@ -227,6 +235,9 @@ bool KSocket::bind(uint16_t port) {
 
 bool KSocket::listen(int backlog) {
   m_lastError = KSE_SUCCESS;
+
+  if (!sanityCheck())
+    return false;
 
   if (m_socketType != KSocketType::KST_STREAM_SERVER_IP4 &&
       m_socketType != KSocketType::KST_STREAM_SERVER_IP6)
@@ -241,6 +252,9 @@ bool KSocket::accept(KAcceptThreadCallback thread_callback) {
   KAcceptedSocket ka;
   struct sockaddr addr;
   socklen_t addrlen = sizeof(addr);
+
+  if (!sanityCheck())
+    return false;
 
   if (m_socket->c.domain != AF_INET) {
     m_lastError = KSE_SETUP_UNSUPPORTED_SOCKET_TYPE;
@@ -282,7 +296,12 @@ bool KSocket::accept(KAcceptThreadCallback thread_callback) {
 }
 
 bool KSocket::close() {
-  int rv = closesocket(m_socket->s);
+  int rv;
+
+  if (!sanityCheck())
+    return false;
+
+  rv = closesocket(m_socket->s);
 
   if (rv == 0) {
     m_socket->s = -1;
@@ -294,6 +313,9 @@ bool KSocket::close() {
 
 bool KSocket::send() {
   m_lastError = KSE_SUCCESS;
+
+  if (!sanityCheck())
+    return false;
 
   if (m_sendBuffer.size() == 0)
     return false;
@@ -313,6 +335,9 @@ bool KSocket::send() {
 bool KSocket::recv(size_t max_recv_size) {
   const size_t current_size = m_recvBuffer.size();
 
+  if (!sanityCheck())
+    return false;
+
   m_recvBuffer.buffer.resize(current_size + max_recv_size);
   m_lastError = ::recv(
       m_socket->s, reinterpret_cast<char *>(m_recvBuffer.data() + current_size),
@@ -322,6 +347,21 @@ bool KSocket::recv(size_t max_recv_size) {
     return true;
   }
 
+  return false;
+}
+
+bool KSocket::sanityCheck() {
+  if (m_socket != nullptr &&
+#ifdef BUILD_USERMODE
+      m_socket->s != INVALID_SOCKET
+#else
+      m_socket->s >= 0
+#endif
+  ) {
+    return true;
+  }
+
+  m_lastError = KSE_INVALID_SOCKET;
   return false;
 }
 

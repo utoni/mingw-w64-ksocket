@@ -1,6 +1,12 @@
 #ifndef HELPER_HPP
 #define HELPER_HPP 1
 
+/*
+ * This file is deprecated and will be removed soon!
+ * Please use ksocket/ksocket.hpp and ksocket/protocol.hpp
+ * to achieve the same.
+ */
+
 #include <protobuf-c/protobuf-c.h>
 #include <stdint.h>
 #include <stdlib.h>

@@ -6,6 +6,8 @@
 #include <EASTL/vector.h>
 #include <cstdint>
 
+#define K_IPPROTO_TCP (6)
+
 using KBuffer = eastl::vector<uint8_t>;
 
 struct KSocketImpl;
@@ -16,6 +18,7 @@ enum {
   KSE_SETUP_INVALID_SOCKET_TYPE = 2,
   KSE_SETUP_UNSUPPORTED_SOCKET_TYPE = 3,
   KSE_ACCEPT_FAILED = 4,
+  KSE_INVALID_SOCKET = 5
 };
 
 enum class KSocketType {
@@ -41,7 +44,7 @@ struct KSocketAddress {
 };
 
 class KAcceptedSocket;
-using KAcceptThreadCallback = eastl::function<bool(KAcceptedSocket &accepted)>;
+using KAcceptThreadCallback = eastl::function<bool(KAcceptedSocket &)>;
 
 struct KSocketBuffer {
   void insert_i8(KBuffer::iterator it, int8_t value) {
@@ -138,6 +141,8 @@ protected:
   bool send();
   bool recv(size_t max_recv_size);
 
+  bool sanityCheck();
+
 public:
   int getLastError() const { return m_lastError; }
 
@@ -186,8 +191,7 @@ public:
   ~KStreamClientIp4() {}
 
   bool setup() {
-    return KSocket::setup(KSocketType::KST_STREAM_CLIENT_IP4,
-                          6 /* IPPROTO_TCP */);
+    return KSocket::setup(KSocketType::KST_STREAM_CLIENT_IP4, K_IPPROTO_TCP);
   }
 
   bool connect(eastl::string host, eastl::string port) {
@@ -211,8 +215,7 @@ public:
   ~KStreamServerIp4() {}
 
   bool setup() {
-    return KSocket::setup(KSocketType::KST_STREAM_SERVER_IP4,
-                          6 /* IPPROTO_TCP */);
+    return KSocket::setup(KSocketType::KST_STREAM_SERVER_IP4, K_IPPROTO_TCP);
   }
 
   bool connect(eastl::string host, eastl::string port) = delete;
