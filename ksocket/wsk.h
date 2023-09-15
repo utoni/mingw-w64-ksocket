@@ -1,6 +1,10 @@
 #ifndef WSK_H
 #define WSK_H 1
 
+#ifdef BUILD_USERMODE
+#error "This file should only be included if building for kernel mode! Include <ksocket/ksocket.hpp> wrapper instead."
+#endif
+
 #include <ntddk.h>
 
 #if !defined(__MINGW64__)

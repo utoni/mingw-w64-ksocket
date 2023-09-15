@@ -1,9 +1,11 @@
-
-extern "C" {
 #include <ksocket/berkeley.h>
 #include <ksocket/ksocket.h>
+#include <ksocket/utils.h>
 #include <ksocket/wsk.h>
 
+#include <ksocket/ksocket.hpp>
+
+extern "C" {
 DRIVER_INITIALIZE DriverEntry;
 DRIVER_UNLOAD DriverUnload;
 
@@ -34,14 +36,14 @@ DriverEntry(_In_ PDRIVER_OBJECT DriverObject,
   // Perform HTTP request to http://httpbin.org/uuid
   //
 
+  const char send_buffer[] = "GET /uuid HTTP/1.1\r\n"
+                             "Host: httpbin.org\r\n"
+                             "Connection: close\r\n"
+                             "\r\n";
+
   {
     int result;
     UNREFERENCED_PARAMETER(result);
-
-    char send_buffer[] = "GET /uuid HTTP/1.1\r\n"
-                         "Host: httpbin.org\r\n"
-                         "Connection: close\r\n"
-                         "\r\n";
 
     char recv_buffer[1024] = {};
 
@@ -66,7 +68,7 @@ DriverEntry(_In_ PDRIVER_OBJECT DriverObject,
       return STATUS_FAILED_DRIVER_ENTRY;
     }
 
-    result = send(sockfd, send_buffer, sizeof(send_buffer), 0);
+    result = send(sockfd, send_buffer, sizeof(send_buffer) - 1, 0);
     if (result <= 0) {
       DebuggerPrint("TCP client send failed\n");
       return STATUS_FAILED_DRIVER_ENTRY;
@@ -81,6 +83,48 @@ DriverEntry(_In_ PDRIVER_OBJECT DriverObject,
     }
 
     closesocket(sockfd);
+  }
+
+  {
+    KStreamClientIp4 tcp4_client = KStreamClientIp4();
+
+    if (!tcp4_client.setup()) {
+      DebuggerPrint("KStreamClientIp4 setup() failed: %d\n",
+                    tcp4_client.getLastError());
+      return STATUS_FAILED_DRIVER_ENTRY;
+    }
+
+    if (!tcp4_client.connect("httpbin.org", "80")) {
+      DebuggerPrint("KStreamClientIp4 connect() failed: %d\n",
+                    tcp4_client.getLastError());
+      return STATUS_FAILED_DRIVER_ENTRY;
+    }
+
+    DebuggerPrint("%s\n", "KStreamClientIp4 connected!");
+
+    tcp4_client.getSendBuffer().insert(tcp4_client.getSendBuffer().end(),
+                                       send_buffer, sizeof(send_buffer) - 1);
+    if (!tcp4_client.send()) {
+      DebuggerPrint("KStreamClientIp4 send() failed: %d\n",
+                    tcp4_client.getLastError());
+      return STATUS_FAILED_DRIVER_ENTRY;
+    }
+
+    if (!tcp4_client.recv()) {
+      DebuggerPrint("KStreamClientIp4 recv() failed: %d\n",
+                    tcp4_client.getLastError());
+      return STATUS_FAILED_DRIVER_ENTRY;
+    }
+
+    DebuggerPrint("KStreamClientIp4 data received:\n%s\n",
+                  tcp4_client.getRecvBuffer().to_string().c_str());
+    DebuggerPrint("KStreamClientIp4 consuming %zu bytes\n",
+                  tcp4_client.getRecvBuffer().size());
+    tcp4_client.getRecvBuffer().consume();
+    DebuggerPrint("KStreamClientIp4 receive buffer size: %zu\n",
+                  tcp4_client.getRecvBuffer().size());
+
+    DebuggerPrint("%s\n", "KStreamClientIp4 finished.");
   }
 
   //
@@ -114,6 +158,10 @@ DriverEntry(_In_ PDRIVER_OBJECT DriverObject,
       return STATUS_FAILED_DRIVER_ENTRY;
     }
 
+    DebuggerPrint(
+        "%s\n",
+        "TCP server is waiting for the user to start userspace_client.exe");
+
     socklen_t addrlen = sizeof(addr);
     int client_sockfd =
         accept(server_sockfd, (struct sockaddr *)&addr, &addrlen);
@@ -124,7 +172,7 @@ DriverEntry(_In_ PDRIVER_OBJECT DriverObject,
 
     result = recv(client_sockfd, recv_buffer, sizeof(recv_buffer) - 1, 0);
     if (result > 0) {
-      DebuggerPrint("TCP server:\n%.*s\n", result, recv_buffer);
+      DebuggerPrint("TCP server received: \"%.*s\"\n", result, recv_buffer);
     } else {
       DebuggerPrint("TCP server recv failed\n");
     }
@@ -137,6 +185,69 @@ DriverEntry(_In_ PDRIVER_OBJECT DriverObject,
 
     closesocket(client_sockfd);
     closesocket(server_sockfd);
+  }
+
+  {
+    KStreamServerIp4 tcp4_server = KStreamServerIp4();
+
+    if (!tcp4_server.setup()) {
+      DebuggerPrint("KStreamServerIp4 setup() failed: %d\n",
+                    tcp4_server.getLastError());
+      return STATUS_FAILED_DRIVER_ENTRY;
+    }
+
+    if (!tcp4_server.bind(9095)) {
+      DebuggerPrint("KStreamServerIp4 bind() failed: %d\n",
+                    tcp4_server.getLastError());
+      return STATUS_FAILED_DRIVER_ENTRY;
+    }
+
+    if (!tcp4_server.listen()) {
+      DebuggerPrint("KStreamServerIp4 bind() failed: %d\n",
+                    tcp4_server.getLastError());
+      return STATUS_FAILED_DRIVER_ENTRY;
+    }
+
+    DebuggerPrint("%s\n", "KStreamServerIp4 listening for incomining "
+                          "connections (run userspace_client.exe again)..");
+
+    const auto &accept_fn = [](KAcceptedSocket &ka) {
+      const auto &remote = ka.getRemote();
+
+      if (remote.addr_used != 4) {
+        return false;
+      }
+      DebuggerPrint("KStreamServerIp4 client connected: %s\n",
+                    remote.to_string().c_str());
+
+      if (!ka.recv()) {
+        DebuggerPrint("KStreamServerIp4 recv failed: %d\n", ka.getLastError());
+        return false;
+      }
+      DebuggerPrint("KStreamServerIp4 received %zu bytes: \"%s\"\n",
+                    ka.getRecvBuffer().size(),
+                    ka.getRecvBuffer().to_string().c_str());
+      ka.getRecvBuffer().consume();
+
+      ka.getSendBuffer().insert_string(ka.getSendBuffer().end(),
+                                       "KStreamServerIp4 says hello!");
+      if (!ka.send()) {
+        DebuggerPrint("KStreamServerIp4 send failed: %d\n", ka.getLastError());
+        return false;
+      }
+      ka.getSendBuffer().consume();
+
+      // Wait for the connection termination.
+      ka.recv();
+
+      return true;
+    };
+    if (!tcp4_server.accept(accept_fn)) {
+      DebuggerPrint("KStreamServerIp4 accept() failed: %d\n",
+                    tcp4_server.getLastError());
+      return STATUS_FAILED_DRIVER_ENTRY;
+    }
+    DebuggerPrint("KStreamServerIp4 done\n");
   }
 
   KsDestroy();

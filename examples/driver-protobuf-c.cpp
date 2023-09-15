@@ -1,6 +1,7 @@
 #include <ksocket/berkeley.h>
 #include <ksocket/helper.hpp>
 #include <ksocket/ksocket.h>
+#include <ksocket/utils.h>
 #include <ksocket/wsk.h>
 
 #include "examples/common.hpp"

@@ -1,0 +1,6 @@
+table FunctionAddresses {
+  names:[string];
+  addrs:[uint64];
+}
+
+root_type FunctionAddresses;

@@ -1,5 +1,12 @@
-#pragma once
-#include "wsk.h"
+#ifndef KSOCKET_H
+#define KSOCKET_H 1
+
+#ifdef BUILD_USERMODE
+#error                                                                         \
+    "This file should only be included if building for kernel mode! Include <ksocket/ksocket.hpp> wrapper instead."
+#endif
+
+#include <ksocket/wsk.h>
 #include <ntddk.h>
 
 #define STATUS_UNSUPPORTED_WINDOWS_VERSION                                     \
@@ -96,4 +103,6 @@ KsRecvFrom(_In_ PKSOCKET Socket, _In_ PVOID Buffer, _Inout_ PULONG Length,
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif

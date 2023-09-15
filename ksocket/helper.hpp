@@ -11,6 +11,8 @@
 #include <EASTL/string.h>
 #include <EASTL/vector.h>
 
+#include <ksocket/utils.h>
+
 #ifndef SOCKET_ERROR
 #define SOCKET_ERROR -1
 #endif

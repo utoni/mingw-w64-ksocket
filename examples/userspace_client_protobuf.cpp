@@ -4,6 +4,7 @@
 #include <ws2tcpip.h>
 
 #include <ksocket/helper.hpp>
+#include <ksocket/utils.h>
 
 #include "examples/common.hpp"
 #include "examples/example.pb-c.h"

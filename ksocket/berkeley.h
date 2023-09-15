@@ -1,6 +1,11 @@
-#pragma once
+#ifndef KSOCKET_BERKELEY_H
+#define KSOCKET_BERKELEY_H 1
+
+#ifdef BUILD_USERMODE
+#error "This file should only be included if building for kernel mode! Include <ksocket/ksocket.hpp> wrapper instead."
+#endif
+
 #include <ntddk.h>
-#include <stdint.h>
 #include <ksocket/wsk.h>
 
 #define socket socket_connection
@@ -11,11 +16,6 @@ extern "C" {
 
 typedef int socklen_t;
 typedef intptr_t ssize_t;
-
-uint32_t htonl(uint32_t hostlong);
-uint16_t htons(uint16_t hostshort);
-uint32_t ntohl(uint32_t netlong);
-uint16_t ntohs(uint16_t netshort);
 
 int getaddrinfo(const char *node, const char *service,
                 const struct addrinfo *hints, struct addrinfo **res);
@@ -38,4 +38,6 @@ int closesocket(int sockfd);
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif
